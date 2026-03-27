@@ -43,7 +43,7 @@ When a user creates an expense:
 ## 📦 Installation
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/ai-expense-tracker.git
+git clone https://github.com/vinay1305/ai-expense-tracker.git
 cd ai-expense-tracker/backend
 npm install
 ```
