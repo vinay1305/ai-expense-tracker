@@ -10,7 +10,6 @@ const createExpense = async (req, res) => {
             return res.status(400).json({ error: "All fields are required" });
         }
 
-        // AI classification
         const aiData = await classifyExpense(title);
 
         const expense = new Expense({
@@ -19,13 +18,17 @@ const createExpense = async (req, res) => {
             date,
             category: aiData.category,
             tags: aiData.tags,
-            note: aiData.note,  //  NEW FIELD
+            note: aiData.note,
             user: req.user.userId
         });
 
         await expense.save();
 
-        res.status(201).json(expense);
+        // Populate user info
+        const populatedExpense = await Expense.findById(expense._id)
+            .populate("user", "email username");
+
+        res.status(201).json(populatedExpense);
 
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -42,8 +45,9 @@ const getExpenses = async (req, res) => {
         if (category) filter.category = category;
         if (tag) filter.tags = tag;
 
-        const expenses = await Expense.find(filter).sort({ date: -1 });
-
+        const expenses = await Expense.find({ user: req.user.userId })
+            .populate("user", "email")
+            .sort({ date: -1 });
         res.json(expenses);
 
     } catch (err) {
@@ -90,15 +94,15 @@ const deleteExpense = async (req, res) => {
 // SUMMARY (AI category-based)
 const getSummary = async (req, res) => {
     try {
-       const summary = await Expense.aggregate([
-  { $match: { user: req.user.userId } },
-  {
-    $group: {
-      _id: "$category",
-      total: { $sum: "$amount" }
-    }
-  }
-]);
+        const summary = await Expense.aggregate([
+            { $match: { user: req.user.userId } },
+            {
+                $group: {
+                    _id: "$category",
+                    total: { $sum: "$amount" }
+                }
+            }
+        ]);
 
         res.json(summary);
 
