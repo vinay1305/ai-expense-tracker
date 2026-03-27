@@ -10,7 +10,7 @@ const createExpense = async (req, res) => {
             return res.status(400).json({ error: "All fields are required" });
         }
 
-        // 🔥 AI classification
+        // AI classification
         const aiData = await classifyExpense(title);
 
         const expense = new Expense({
@@ -107,7 +107,7 @@ const getSummary = async (req, res) => {
     }
 };
 
-// BONUS: CORRECT CATEGORY (AI LEARNING)
+//  CORRECT CATEGORY (AI LEARNING)
 const correctCategory = async (req, res) => {
     try {
         const { category } = req.body;
@@ -118,7 +118,7 @@ const correctCategory = async (req, res) => {
             return res.status(404).json({ error: "Expense not found" });
         }
 
-        // 🧠 store correction in AI memory
+        //store correction in AI memory
         addCorrection(expense.title, category);
 
         expense.category = category;
