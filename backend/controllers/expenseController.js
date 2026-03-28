@@ -28,34 +28,46 @@ const createExpense = async (req, res) => {
         const populatedExpense = await Expense.findById(expense._id)
             .populate("user", "email username");
 
-        res.status(201).json(populatedExpense);
+        res.status(201).json({ message: "Expense created successfully", populatedExpense });
 
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
 };
 
-// GET ALL EXPENSES (with filters)
+// GET ALL EXPENSES (with filters and pagination )
 const getExpenses = async (req, res) => {
-    try {
-        const { category, tag } = req.query;
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = 10;
 
-        let filter = { user: req.user.userId };
+    const { category, tag } = req.query;
 
-        if (category) filter.category = category;
-        if (tag) filter.tags = tag;
+    let filter = {
+      user: req.user.userId
+    };
 
-        const expenses = await Expense.find(filter)
-            .populate("user", "email")
-            .sort({ createdAt: -1 });
-
-        res.json(expenses);
-
-    } catch (err) {
-        res.status(500).json({ error: err.message });
+    // 🔥 Case-insensitive category
+    if (category) {
+      filter.category = { $regex: `^${category}$`, $options: "i" };
     }
-};
 
+    // 🔥 Case-insensitive tag (array)
+    if (tag) {
+      filter.tags = { $regex: tag, $options: "i" };
+    }
+
+    const expenses = await Expense.find(filter)
+      .sort({ createdAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(limit);
+
+    res.json(expenses);
+
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
 // GET SINGLE EXPENSE
 const getExpenseById = async (req, res) => {
     try {
@@ -120,7 +132,7 @@ const deleteExpense = async (req, res) => {
             return res.status(404).json({ error: "Expense not found" });
         }
 
-        res.json({ message: "Deleted successfully" });
+        res.json({ message: "Expense deleted successfully" });
 
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -179,6 +191,7 @@ module.exports = {
     getExpenses,
     getExpenseById,
     deleteExpense,
+    updateExpense,
     getSummary,
-    correctCategory
+    correctCategory,
 };
