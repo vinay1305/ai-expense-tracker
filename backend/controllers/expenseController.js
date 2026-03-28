@@ -45,9 +45,10 @@ const getExpenses = async (req, res) => {
         if (category) filter.category = category;
         if (tag) filter.tags = tag;
 
-        const expenses = await Expense.find({ user: req.user.userId })
+        const expenses = await Expense.find(filter)
             .populate("user", "email")
-            .sort({ date: -1 });
+            .sort({ createdAt: -1 });
+
         res.json(expenses);
 
     } catch (err) {
@@ -72,7 +73,42 @@ const getExpenseById = async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 };
+// EDIT EXPENSE
+const updateExpense = async (req, res) => {
+    try {
+        const { title, amount, date, category, tags, note } = req.body;
 
+        const expense = await Expense.findOne({
+            _id: req.params.id,
+            user: req.user.userId
+        });
+
+        if (!expense) {
+            return res.status(404).json({ error: "Expense not found" });
+        }
+
+        // update fields 
+        if (title) expense.title = title;
+        if (amount) expense.amount = amount;
+        if (date) expense.date = date;
+        if (category) expense.category = category;
+        if (tags) expense.tags = tags;
+        if (note) expense.note = note;
+
+        await expense.save();
+
+        const updatedExpense = await Expense.findById(expense._id)
+            .populate("user", "email username");
+
+        res.json({
+            message: "Expense updated successfully",
+            expense: updatedExpense
+        });
+
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+};
 // DELETE EXPENSE
 const deleteExpense = async (req, res) => {
     try {
