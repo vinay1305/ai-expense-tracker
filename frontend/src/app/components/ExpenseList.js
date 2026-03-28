@@ -2,7 +2,7 @@
 
 import React from "react";
 
-export default function ExpenseList({ expenses, loading }) {
+export default function ExpenseList({ expenses, loading, onEdit, onDelete }) {
     //  Loading skeleton
     if (loading) {
         return (
@@ -79,14 +79,14 @@ export default function ExpenseList({ expenses, loading }) {
 
                     <div className="flex justify-end gap-3 mt-4">
                         <button
-                            //onClick={() => handleEdit(e)}
+                            onClick={() => onEdit(e)}
                             className="px-3 py-1 text-sm rounded-full bg-blue-600 hover:bg-blue-500 transition"
                         >
                             Edit
                         </button>
 
                         <button
-                           // onClick={() => handleDelete(e._id)}
+                            onClick={() => onDelete(e._id)}
                             className="px-3 py-1 text-sm rounded-full bg-red-600 hover:bg-red-500 transition"
                         >
                             Delete

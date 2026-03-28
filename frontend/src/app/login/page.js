@@ -3,7 +3,7 @@
 import { useState } from "react";
 import API from "../services/api";
 import { useRouter } from "next/navigation";
-
+import toast from "react-hot-toast";
 export default function Login() {
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
@@ -11,6 +11,10 @@ export default function Login() {
   const router = useRouter();
 
   const handleLogin = async () => {
+    if (username === "" || email === "" || password === "") {
+      toast.error("Please enter the details")
+      return
+    }
     try {
       const res = await API.post("/auth/login", {
         username,
@@ -20,10 +24,10 @@ export default function Login() {
 
       localStorage.setItem("token", res.data.token);
       localStorage.setItem("user", JSON.stringify(res.data.user));
-
+      toast.success(res?.data?.message || "Logged in successfully!");
       router.push("/dashboard");
     } catch (err) {
-      alert("Login failed");
+      toast.error(err?.response?.data?.message || "Login failed");
     }
   };
 
