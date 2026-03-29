@@ -4,43 +4,56 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 export default function Header() {
-    const router = useRouter();
-    const [username, setUsername] = useState("");
+  const router = useRouter();
+  const [username, setUsername] = useState("");
 
-    useEffect(() => {
-        const user = JSON.parse(localStorage.getItem("user"));
-        if (user) {
-            setUsername(user.username);
-        }
-    }, []);
+  useEffect(() => {
+    const user = JSON.parse(localStorage.getItem("user"));
+    if (user) {
+      setUsername(user.username);
+    }
+  }, []);
 
-    const handleLogout = () => {
-        localStorage.removeItem("token");
-        localStorage.removeItem("user");
-        router.push("/login");
-    };
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    router.push("/login");
+  };
+const displayName = username?.length > 10
+  ? username.slice(0, 10) + "..."
+  : username;
+  return (
+    <div className="sticky top-0 z-50 bg-black border-b border-gray-800 text-white">
 
-    return (
-        <div className="flex justify-between items-center px-6 py-4 bg-black border-b border-gray-800 text-white sticky top-0 z-50">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
 
-            {/* Left: Logo */}
-            <h1 className="text-xl font-bold tracking-tight">
-                💰 Expense Tracker
-            </h1>
+        {/* Logo */}
+        <h1 className="text-lg sm:text-xl font-bold tracking-tight text-center sm:text-left">
+          💰 Expense Tracker
+        </h1>
 
-            {/* Right: User + Logout */}
-            <div className="flex items-center gap-4">
-                <span className="text-sm text-gray-300">
-                    Hi, <span className="text-white font-medium">{username}</span>
-                </span>
+        {/* Right section */}
+        <div className="flex items-center justify-between sm:justify-end gap-3">
 
-                <button
-                    onClick={handleLogout}
-                    className="px-4 py-1.5 rounded-full bg-white text-black text-sm font-semibold hover:bg-gray-200 transition"
-                >
-                    Logout
-                </button>
-            </div>
+          {/* Username */}
+          <span className="text-xs sm:text-sm text-gray-300 truncate max-w-[140px] sm:max-w-none">
+            Hi,{" "}
+            <span className="text-white font-medium">
+              {displayName || "User"}
+            </span>
+          </span>
+
+          {/* Logout */}
+          <button
+            onClick={handleLogout}
+            className="px-3 sm:px-4 py-1.5 rounded-full bg-white text-black text-xs sm:text-sm font-semibold hover:bg-gray-200 transition whitespace-nowrap"
+          >
+            Logout
+          </button>
+
         </div>
-    );
+
+      </div>
+    </div>
+  );
 }

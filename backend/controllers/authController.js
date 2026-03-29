@@ -26,7 +26,7 @@ const register = async (req, res) => {
         });
 
         await user.save();
-      //  console.log("User registered:", user);
+        //  console.log("User registered:", user);
         res.json({ message: "User registered successfully" });
 
     } catch (err) {
@@ -37,26 +37,35 @@ const register = async (req, res) => {
 // LOGIN
 const login = async (req, res) => {
     try {
-        const { username, email, password } = req.body;
+        const { email, password } = req.body;
 
-        const user = await User.findOne({ $or: [{ username }, { email }] });
-
-        if (!user) {
-            return res.status(400).json({ error: "Invalid credentials" });
+        //  validate input
+        if (!email || !password) {
+            return res.status(400).json({ error: "Email and password are required" });
         }
 
+        //  find user
+        const user = await User.findOne({ email });
+
+        if (!user) {
+            return res.status(400).json({ error: "Invalid email or password" });
+        }
+
+        // compare password
         const isMatch = await bcrypt.compare(password, user.password);
 
         if (!isMatch) {
-            return res.status(400).json({ error: "Invalid credentials" });
+            return res.status(400).json({ error: "Invalid email or password" });
         }
 
+        //  generate token
         const token = jwt.sign(
             { userId: user._id },
             process.env.JWT_SECRET,
             { expiresIn: "7d" }
         );
 
+        //  response
         res.json({
             message: "Login successful",
             token,

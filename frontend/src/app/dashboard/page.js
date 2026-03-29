@@ -9,6 +9,8 @@ import ExpenseList from "../components/ExpenseList";
 import AddExpense from "../components/AddExpense";
 import DeleteModal from "../components/DeleteModal";
 import useDebounce from "../../hooks/useDebounce";
+import ExpenseChart from "../components/ExpenseChart";
+
 export default function Dashboard() {
   const [expenses, setExpenses] = useState([]);
   const [showModal, setShowModal] = useState(false);
@@ -21,29 +23,34 @@ export default function Dashboard() {
   const [tags, setTags] = useState("");
   const [note, setNote] = useState("");
   const [deleteId, setDeleteId] = useState(null);
-  // For pagination 
+
+  // pagination
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
-  // for filter
+
+  // filters
   const [categoryFilter, setCategoryFilter] = useState("");
   const [tagFilter, setTagFilter] = useState("");
-  // for debounce 
+
   const debouncedCategory = useDebounce(categoryFilter, 500);
   const debouncedTag = useDebounce(tagFilter, 500);
 
+  // charts
+  const [summary, setSummary] = useState([]);
+  const [trendData, setTrendData] = useState([]);
+
+  // for disabled state of add/edit button in modal 
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // ---------------- FETCH EXPENSES ----------------
   const fetchExpenses = async () => {
     try {
       setLoading(true);
 
       let url = `/expenses?page=${page}`;
 
-     if (debouncedCategory) {
-  url += `&category=${debouncedCategory}`;
-}
-
-if (debouncedTag) {
-  url += `&tag=${debouncedTag}`;
-}
+      if (debouncedCategory) url += `&category=${debouncedCategory}`;
+      if (debouncedTag) url += `&tag=${debouncedTag}`;
 
       const res = await API.get(url);
 
@@ -54,8 +61,8 @@ if (debouncedTag) {
           page === 1 ? res.data : [...prev, ...res.data]
         );
       }
-
     } catch (err) {
+      console.error("Fetch expenses error:", err);
       toast.error("Failed to load expenses ❌");
     } finally {
       setLoading(false);
@@ -64,13 +71,59 @@ if (debouncedTag) {
 
   useEffect(() => {
     fetchExpenses();
-  },[page, debouncedCategory, debouncedTag]);
+  }, [page, debouncedCategory, debouncedTag]);
+
   const loadMore = () => {
     setPage((prev) => prev + 1);
   };
+
+  // ---------------- CHARTS ----------------
+  const fetchSummary = async () => {
+    try {
+      const res = await API.get("/expenses/summary");
+      setSummary(res.data);
+    } catch {
+      toast.error("Summary error ❌");
+    }
+  };
+
+  const fetchTrend = async () => {
+    try {
+      const res = await API.get("/expenses/trend");
+      setTrendData(res.data);
+    } catch {
+      toast.error("Trend error ❌");
+    }
+  };
+
+  // 🔥 CENTRAL REFRESH FUNCTION
+  const refreshAllData = () => {
+    if (page === 1) {
+      fetchExpenses();
+    } else {
+      setPage(1);
+    }
+
+    setHasMore(true);
+
+    // charts refresh
+    fetchSummary();
+    fetchTrend();
+  };
+
+  useEffect(() => {
+    fetchSummary();
+    fetchTrend();
+  }, []);
+
+  // ---------------- ADD / EDIT ----------------
   const addExpense = async () => {
+    if (isSubmitting) return; //  block double click
+
+    setIsSubmitting(true);
+
     const loadingToast = toast.loading(
-      editingId ? "Updating expense..." : "Adding expense..."
+      editingId ? "Updating..." : "Adding..."
     );
 
     try {
@@ -85,7 +138,6 @@ if (debouncedTag) {
           tags: tags ? tags.split(",").map(t => t.trim()) : [],
           note
         });
-
         setEditingId(null);
       } else {
         res = await API.post("/expenses", {
@@ -107,15 +159,17 @@ if (debouncedTag) {
       setTags("");
       setNote("");
 
-      //trigger refetch via useEffect
-      setPage(1);
-      setHasMore(true);
+      refreshAllData();
 
     } catch (err) {
       toast.dismiss(loadingToast);
-      toast.error(err.response?.data?.error || "Something went wrong ❌");
+      toast.error(err.response?.data?.error || "Error ❌");
+    } finally {
+      setIsSubmitting(false); //  re-enable
     }
   };
+
+  // ---------------- EDIT ----------------
   const handleEdit = (expense) => {
     setShowModal(true);
     setTitle(expense.title || "");
@@ -126,11 +180,14 @@ if (debouncedTag) {
     setNote(expense.note || "");
     setEditingId(expense._id);
   };
+
+  // ---------------- DELETE ----------------
   const handleDelete = (id) => {
-    setDeleteId(id); // open modal
+    setDeleteId(id);
   };
+
   const confirmDelete = async () => {
-    const loadingToast = toast.loading("Deleting expense...");
+    const loadingToast = toast.loading("Deleting...");
 
     try {
       const res = await API.delete(`/expenses/${deleteId}`);
@@ -140,64 +197,52 @@ if (debouncedTag) {
 
       setDeleteId(null);
 
-      // trigger refetch via useEffect
-      setPage(1);
-      setHasMore(true);
+      refreshAllData();
 
     } catch (err) {
       toast.dismiss(loadingToast);
       toast.error(err.response?.data?.error || "Delete failed ❌");
     }
   };
+
   return (
     <ProtectedRoute>
       <div className="min-h-screen bg-black text-white">
         <Header />
 
-        {/* MAIN CONTENT */}
-        <div className="p-6 max-w-4xl mx-auto">
+        <div className="px-4 sm:px-6 md:px-8 py-6 max-w-6xl mx-auto">
 
-          {/* Top Section */}
-          <div className="flex justify-between items-center mb-6">
-            <h1 className="text-2xl font-bold">Dashboard</h1>
+          {/* HEADER */}
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
+            <h1 className="text-xl sm:text-2xl font-bold text-center sm:text-left">
+              Dashboard
+            </h1>
 
             <button
               onClick={() => setShowModal(true)}
-              className="bg-white text-black px-5 py-2 rounded-full font-semibold hover:bg-gray-200 transition"
+              className="w-full sm:w-auto bg-white text-black px-5 py-2 rounded-full font-semibold hover:bg-gray-200 transition"
             >
               + Add Expense
             </button>
           </div>
-          <div className="flex flex-wrap gap-3 mb-6">
 
-            {/* Category Filter */}
+          {/* FILTERS */}
+          <div className="flex flex-col sm:flex-row gap-3 mb-6">
+
             <input
-              placeholder="Filter by category"
-              className="px-4 py-2 rounded-lg bg-black border border-gray-700 focus:outline-none focus:border-blue-500"
+              placeholder="Category"
               value={categoryFilter}
               onChange={(e) => setCategoryFilter(e.target.value)}
+              className="w-full sm:flex-1 px-4 py-2 bg-black border border-gray-700 rounded-lg focus:outline-none focus:border-blue-500"
             />
 
-            {/* Tag Filter */}
             <input
-              placeholder="Filter by tag"
-              className="px-4 py-2 rounded-lg bg-black border border-gray-700 focus:outline-none focus:border-blue-500"
+              placeholder="Tag"
               value={tagFilter}
               onChange={(e) => setTagFilter(e.target.value)}
+              className="w-full sm:flex-1 px-4 py-2 bg-black border border-gray-700 rounded-lg focus:outline-none focus:border-blue-500"
             />
 
-            {/* Apply Button */}
-            {/* <button
-              onClick={() => {
-                setPage(1);
-                setHasMore(true);
-              }}
-              className="bg-blue-600 px-4 py-2 rounded-lg hover:bg-blue-500"
-            >
-              Apply
-            </button> */}
-
-            {/* Reset Button */}
             <button
               onClick={() => {
                 setCategoryFilter("");
@@ -205,17 +250,36 @@ if (debouncedTag) {
                 setPage(1);
                 setHasMore(true);
               }}
-              className="bg-gray-700 px-4 py-2 rounded-lg hover:bg-gray-600"
+              className="w-full sm:w-auto bg-gray-700 px-4 py-2 rounded-lg hover:bg-gray-600 transition"
             >
               Reset
             </button>
 
           </div>
-          {/* EXPENSE LIST */}
-          <ExpenseList expenses={expenses}
+
+          {/* CHART */}
+          <div className="mb-8">
+            <div className="bg-gray-900 border border-gray-800 rounded-2xl p-4 sm:p-6 shadow-lg hover:shadow-xl transition">
+
+              <h2 className="text-base sm:text-lg font-semibold mb-4 text-center">
+                Category-wise Spending 📊
+              </h2>
+
+              <div className="w-full h-[250px] sm:h-[300px] md:h-[350px]">
+                <ExpenseChart data={summary} />
+              </div>
+
+            </div>
+          </div>
+
+          {/* LIST */}
+          <ExpenseList
+            expenses={expenses}
             loading={loading}
             onEdit={handleEdit}
-            onDelete={handleDelete} />
+            onDelete={handleDelete}
+          />
+
         </div>
 
         {/* MODAL */}
@@ -236,14 +300,17 @@ if (debouncedTag) {
             setCategory={setCategory}
             tags={tags}
             setTags={setTags}
+            isSubmitting={isSubmitting}
           />
         )}
+
+        {/* LOAD MORE */}
         {hasMore && (
-          <div className="flex justify-center mt-6">
+          <div className="flex justify-center px-4 pb-6">
             <button
               onClick={loadMore}
               disabled={loading}
-              className={`px-5 py-2 rounded-full transition ${loading
+              className={`w-full sm:w-auto px-5 py-2 rounded-full transition ${loading
                 ? "bg-gray-700 cursor-not-allowed"
                 : "bg-gray-800 hover:bg-gray-700"
                 }`}
@@ -252,6 +319,8 @@ if (debouncedTag) {
             </button>
           </div>
         )}
+
+        {/* DELETE MODAL */}
         {deleteId && (
           <DeleteModal
             onClose={() => setDeleteId(null)}

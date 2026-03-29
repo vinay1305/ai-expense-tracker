@@ -13,48 +13,48 @@ export default function Register() {
 
   const router = useRouter();
 
-const handleRegister = async (e) => {
-  e.preventDefault();
+  const handleRegister = async (e) => {
+    e.preventDefault();
 
-  if (!username || !email || !password) {
-    toast.error("Please enter all details");
-    return;
-  }
+    if (!username || !email || !password) {
+      toast.error("Please enter all details");
+      return;
+    }
 
-  const loadingToast = toast.loading("Creating account...");
+    const loadingToast = toast.loading("Creating account...");
 
-  try {
-    // 1️⃣ Register
-    await API.post("/auth/register", {
-      username,
-      email,
-      password
-    });
+    try {
+      // 1️⃣ Register
+      await API.post("/auth/register", {
+        username,
+        email,
+        password
+      });
 
-    // 2️⃣ Auto login immediately
-    const res = await API.post("/auth/login", {
-      username,
-      email,
-      password
-    });
+      // 2️⃣ Auto login immediately
+      const res = await API.post("/auth/login", {
+        username,
+        email,
+        password
+      });
 
-    localStorage.setItem("token", res.data.token);
-    localStorage.setItem("user", JSON.stringify(res.data.user));
+      localStorage.setItem("token", res.data.token);
+      localStorage.setItem("user", JSON.stringify(res.data.user));
 
-    toast.dismiss(loadingToast);
-    toast.success("Account created 🎉");
+      toast.dismiss(loadingToast);
+      toast.success("Account created 🎉");
 
-    // 3️⃣ Go to dashboard
-    router.push("/dashboard");
+      // 3️⃣ Go to dashboard
+      router.push("/dashboard");
 
-  } catch (err) {
-    toast.dismiss(loadingToast);
-console.log(err)
-    toast.error(
-      err.response?.data?.error || "Registration failed ❌"
-    );
-  }
-};
+    } catch (err) {
+      toast.dismiss(loadingToast);
+      console.log(err)
+      toast.error(
+        err.response?.data?.error || "Registration failed ❌"
+      );
+    }
+  };
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-black text-white">
@@ -78,6 +78,7 @@ console.log(err)
           <input
             type="email"
             placeholder="Email"
+            pattern="/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/"
             className="w-full mb-4 px-4 py-3 rounded-lg bg-black border border-gray-700 focus:outline-none focus:border-blue-500"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
@@ -94,11 +95,10 @@ console.log(err)
           <button
             type="submit"
             disabled={loading}
-            className={`w-full font-semibold py-3 rounded-full transition ${
-              loading
+            className={`w-full font-semibold py-3 rounded-full transition ${loading
                 ? "bg-gray-600 text-gray-400 cursor-not-allowed"
                 : "bg-white text-black hover:bg-gray-200"
-            }`}
+              }`}
           >
             {loading ? "Signing up..." : "Sign up"}
           </button>
