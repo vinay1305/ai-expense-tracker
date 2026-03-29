@@ -14,10 +14,11 @@ const app = express();
 app.use(cors({
   origin: [
     "http://localhost:3000",
-    "https://your-app.vercel.app"
+    "https://ai-expense-tracker-pied-chi.vercel.app"
   ],
   credentials: true
 }));
+
 app.use(express.json());
 
 // connect DB
