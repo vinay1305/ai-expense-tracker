@@ -78,7 +78,6 @@ export default function Register() {
           <input
             type="email"
             placeholder="Email"
-            pattern="/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/"
             className="w-full mb-4 px-4 py-3 rounded-lg bg-black border border-gray-700 focus:outline-none focus:border-blue-500"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
@@ -96,8 +95,8 @@ export default function Register() {
             type="submit"
             disabled={loading}
             className={`w-full font-semibold py-3 rounded-full transition ${loading
-                ? "bg-gray-600 text-gray-400 cursor-not-allowed"
-                : "bg-white text-black hover:bg-gray-200"
+              ? "bg-gray-600 text-gray-400 cursor-not-allowed"
+              : "bg-white text-black hover:bg-gray-200"
               }`}
           >
             {loading ? "Signing up..." : "Sign up"}
