@@ -31,6 +31,26 @@ A modern full-stack expense tracking application with **AI-powered categorizatio
 * Works seamlessly across devices
 * Clean SaaS-style dashboard
 
+### 🚀 Feature Added
+
+- 📥 Export expenses to Excel (.xlsx)
+- 🎯 Filter-based export (category & tags)
+- 🎨 Styled report with headers, colors, and formatting
+- 💰 Total expense calculation in Excel
+
+### 💡 Highlights
+
+- Professional finance-style report
+- Improved readability with zebra rows
+- Frozen header row for better UX
+- Dynamic data export based on filters
+
+### 🛠 Tech Used
+
+- ExcelJS
+- Express.js
+- Axios (blob download)
+
 ---
 
 ## 🛠 Tech Stack
