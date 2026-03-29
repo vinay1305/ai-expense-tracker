@@ -204,7 +204,43 @@ export default function Dashboard() {
       toast.error(err.response?.data?.error || "Delete failed ❌");
     }
   };
+  // ---------------- DOWNLOAD EXCEL ---------------- 
+  const handleDownload = async () => {
+    try {
+      let url = "/expenses/export";
 
+      const params = [];
+
+      if (categoryFilter) {
+        params.push(`category=${categoryFilter}`);
+      }
+
+      if (tagFilter) {
+        params.push(`tag=${tagFilter}`);
+      }
+
+      if (params.length > 0) {
+        url += `?${params.join("&")}`;
+      }
+
+      const res = await API.get(url, {
+        responseType: "blob",
+      });
+
+      const blob = new Blob([res.data]);
+      const link = document.createElement("a");
+
+      link.href = window.URL.createObjectURL(blob);
+      link.download = "expenses.xlsx";
+
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+
+    } catch (err) {
+      toast.error("Download failed ❌");
+    }
+  };
   return (
     <ProtectedRoute>
       <div className="min-h-screen bg-black text-white">
@@ -217,13 +253,21 @@ export default function Dashboard() {
             <h1 className="text-xl sm:text-2xl font-bold text-center sm:text-left">
               Dashboard
             </h1>
+            <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
 
-            <button
-              onClick={() => setShowModal(true)}
-              className="w-full sm:w-auto bg-white text-black px-5 py-2 rounded-full font-semibold hover:bg-gray-200 transition"
-            >
-              + Add Expense
-            </button>
+              <button
+                onClick={handleDownload}
+                className="bg-green-600 text-white px-4 py-2 rounded-full hover:bg-green-500"
+              >
+                Download Excel 📥
+              </button>
+              <button
+                onClick={() => setShowModal(true)}
+                className="w-full sm:w-auto bg-white text-black px-5 py-2 rounded-full font-semibold hover:bg-gray-200 transition"
+              >
+                + Add Expense
+              </button>
+            </div>
           </div>
 
           {/* FILTERS */}

@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const Exceljs = require("exceljs");
 const Expense = require("../models/Expense");
 const { classifyExpense, addCorrection } = require("../services/aiService");
 
@@ -229,6 +230,125 @@ const getTrend = async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 };
+// Excel download
+const exportExpenses = async (req, res) => {
+    try {
+        const { category, tag } = req.query;
+
+        let filter = { user: req.user.userId };
+
+        if (category) filter.category = category;
+        if (tag) filter.tags = tag;
+
+        const expenses = await Expense.find(filter).sort({ createdAt: -1 });
+
+        const workbook = new Exceljs.Workbook();
+        const worksheet = workbook.addWorksheet("Expense Report");
+
+        //  TITLE
+        worksheet.mergeCells("A1:F1");
+        const titleCell = worksheet.getCell("A1");
+        titleCell.value = "Expense Report";
+        titleCell.font = { size: 16, bold: true };
+        titleCell.alignment = { horizontal: "center" };
+
+        //  Subtitle
+        worksheet.mergeCells("A2:F2");
+        worksheet.getCell("A2").value = `Generated on: ${new Date().toLocaleDateString()}`;
+        worksheet.getCell("A2").alignment = { horizontal: "center" };
+
+        //  Columns
+        worksheet.columns = [
+            { header: "Title", key: "title", width: 20 },
+            { header: "Amount (₹)", key: "amount", width: 15 },
+            { header: "Category", key: "category", width: 15 },
+            { header: "Tags", key: "tags", width: 20 },
+            { header: "Note", key: "note", width: 30 },
+            { header: "Date", key: "date", width: 15 },
+        ];
+
+        //  Start rows after title
+        const startRow = 4;
+
+        // Add header row manually
+        worksheet.getRow(startRow).values = [
+            "Title",
+            "Amount (₹)",
+            "Category",
+            "Tags",
+            "Note",
+            "Date",
+        ];
+
+        //  Style header
+        worksheet.getRow(startRow).eachCell((cell) => {
+            cell.font = { bold: true, color: { argb: "FFFFFFFF" } };
+            cell.fill = {
+                type: "pattern",
+                pattern: "solid",
+                fgColor: { argb: "FF3B82F6" }, // blue
+            };
+            cell.alignment = { horizontal: "center" };
+        });
+
+        let total = 0;
+
+        //  Data rows
+        expenses.forEach((exp, index) => {
+            const row = worksheet.addRow({
+                title: exp.title,
+                amount: exp.amount,
+                category: exp.category,
+                tags: exp.tags.join(", "),
+                note: exp.note,
+                date: new Date(exp.date).toLocaleDateString(),
+            });
+
+            total += exp.amount;
+
+            // optional zebra styling
+            if (index % 2 === 0) {
+                row.eachCell((cell) => {
+                    cell.fill = {
+                        type: "pattern",
+                        pattern: "solid",
+                        fgColor: { argb: "FFF9FAFB" },
+                    };
+                });
+            }
+        });
+
+        //  TOTAL ROW
+        const totalRow = worksheet.addRow({});
+        const totalLabelCell = worksheet.getCell(`A${totalRow.number}`);
+        totalLabelCell.value = "Total";
+        totalLabelCell.font = { bold: true };
+
+        const totalValueCell = worksheet.getCell(`B${totalRow.number}`);
+        totalValueCell.value = total;
+        totalValueCell.font = { bold: true };
+
+        // Freeze header
+        worksheet.views = [{ state: "frozen", ySplit: startRow }];
+
+        //  Response
+        res.setHeader(
+            "Content-Type",
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        );
+
+        res.setHeader(
+            "Content-Disposition",
+            "attachment; filename=expense-report.xlsx"
+        );
+
+        await workbook.xlsx.write(res);
+        res.end();
+
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+};
 module.exports = {
     createExpense,
     getExpenses,
@@ -237,5 +357,6 @@ module.exports = {
     updateExpense,
     getSummary,
     correctCategory,
-    getTrend
+    getTrend,
+    exportExpenses
 };
