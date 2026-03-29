@@ -1,69 +1,114 @@
-# ai-expense-tracker
-A simple full stack project with ai expense tracking system
 # 💰 AI Expense Tracker
 
-A full-stack expense tracking application with AI-powered classification using Google Gemini.
+A modern full-stack expense tracking application with **AI-powered categorization**, interactive **charts**, and a **clean responsive UI**.
 
 ---
 
 ## 🚀 Features
 
-* Add, view, delete expenses
-* AI-based category classification (Gemini API)
-* Tags and notes generated automatically
-* Expense summary by category
-* JWT Authentication (user-specific data)
-* MongoDB database integration
+### 🧾 Core Functionality
 
----
+* Add, edit, and delete expenses
+* AI-based expense categorization (auto tags, category, notes)
+* Secure authentication using JWT
+* Pagination for large datasets
 
-## 🧠 AI Integration
+### 📊 Analytics
 
-When a user creates an expense:
+* Category-wise expense visualization (Pie / Bar / Line charts)
+* Real-time updates on data changes
 
-* The backend sends the expense title to Gemini API
-* AI returns:
+### ⚡ UX Improvements
 
-  * Category (Food, Transport, etc.)
-  * Tags
-  * Explanation note
-* If AI fails → fallback logic is used
+* Debounced filtering (category & tags)
+* Toast notifications for actions
+* Prevent duplicate submissions
+* Loading skeletons for better experience
+
+### 📱 Responsive Design
+
+* Mobile-first UI
+* Works seamlessly across devices
+* Clean SaaS-style dashboard
 
 ---
 
 ## 🛠 Tech Stack
 
-* **Backend:** Node.js, Express
-* **Database:** MongoDB (Mongoose)
-* **AI:** Google Gemini API
-* **Auth:** JWT
+### Frontend
+
+* **Next.js (App Router)**
+* **Tailwind CSS**
+* **Recharts**
+* **Axios**
+* **React Hot Toast**
+
+### Backend
+
+* **Node.js**
+* **Express.js**
+* **MongoDB (Mongoose)**
+* **JWT Authentication**
+* **bcrypt.js**
+
+### AI Integration
+
+* Google Gemini API for smart expense classification
 
 ---
 
-## 📦 Installation
+## 📂 Project Structure
+
+```
+expense-tracker/
+│
+├── backend/
+│   ├── controllers/
+│   ├── models/
+│   ├── routes/
+│   ├── middleware/
+│   ├── services/
+│   └── server.js
+│
+├── frontend/
+│   ├── app/
+│   ├── components/
+│   ├── services/
+│   └── hooks/
+│
+└── README.md
+```
+
+---
+
+## ⚙️ Setup Instructions
+
+### 1️⃣ Clone the repository
 
 ```bash
 git clone https://github.com/vinay1305/ai-expense-tracker.git
-cd ai-expense-tracker/backend
+cd ai-expense-tracker
+```
+
+---
+
+### 2️⃣ Backend Setup
+
+```bash
+cd backend
 npm install
 ```
 
----
+Create `.env` file:
 
-## ⚙️ Environment Variables
-
-Create a `.env` file:
-
-```env
+```
 PORT=5000
 MONGO_URI=your_mongodb_uri
-GEMINI_API_KEY=your_api_key
 JWT_SECRET=your_secret
+GEMINI_API_KEY=your_api_key
 ```
 
----
-
-## ▶️ Run Server
+Run backend:
 
 ```bash
 npm run dev
@@ -71,50 +116,61 @@ npm run dev
 
 ---
 
-## 📡 API Endpoints
+### 3️⃣ Frontend Setup
 
-### Auth
-
-* POST /api/auth/register
-* POST /api/auth/login
-
-### Expenses
-
-* POST /api/expenses
-* GET /api/expenses
-* GET /api/expenses/:id
-* DELETE /api/expenses/:id
-* GET /api/expenses/summary
-
----
-
-## 🧪 Testing
-
-Use Postman:
-
-* Add Authorization header:
-
-```
-Bearer <token>
+```bash
+cd frontend
+npm install
+npm run dev
 ```
 
 ---
 
-## ⚠️ Notes
+## 🔐 Authentication
 
-* `.env` is ignored for security
-* `.env.example` should be used for setup
-* Includes fallback AI logic for reliability
+* Register with email, username, password
+* Login using email + password
+* JWT stored in localStorage
 
 ---
 
-## 🎯 Bonus
+## 📸 Screenshots (Add these)
 
-* Supports user-specific expense tracking
-* Designed for scalability and real-world use
+* Dashboard UI
+* Add Expense Modal
+* Charts View
+* Mobile View
+
+---
+
+## 🧠 Key Learnings
+
+* Implemented **debouncing for API optimization**
+* Designed **scalable REST APIs**
+* Integrated **AI for intelligent categorization**
+* Built **responsive UI with Tailwind**
+* Managed **state and async flows efficiently**
+
+---
+
+## 🚀 Future Improvements
+
+* Export reports (PDF/CSV)
+* Monthly analytics dashboard
+* Budget alerts & notifications
+* Dark/Light mode toggle
+* Role-based authentication
 
 ---
 
 ## 👨‍💻 Author
 
-Vinay Kumar
+**Vinay Kumar**
+
+* GitHub: https://github.com/vinay1305
+
+---
+
+## ⭐ If you like this project
+
+Give it a ⭐ on GitHub!
