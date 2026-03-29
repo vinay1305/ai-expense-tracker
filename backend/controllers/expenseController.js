@@ -1,3 +1,4 @@
+const mongoose = require("mongoose");
 const Expense = require("../models/Expense");
 const { classifyExpense, addCorrection } = require("../services/aiService");
 
@@ -37,36 +38,36 @@ const createExpense = async (req, res) => {
 
 // GET ALL EXPENSES (with filters and pagination )
 const getExpenses = async (req, res) => {
-  try {
-    const page = parseInt(req.query.page) || 1;
-    const limit = 10;
+    try {
+        const page = parseInt(req.query.page) || 1;
+        const limit = 10;
 
-    const { category, tag } = req.query;
+        const { category, tag } = req.query;
 
-    let filter = {
-      user: req.user.userId
-    };
+        let filter = {
+            user: req.user.userId
+        };
 
-    // 🔥 Case-insensitive category
-    if (category) {
-      filter.category = { $regex: `^${category}$`, $options: "i" };
+        // 🔥 Case-insensitive category
+        if (category) {
+            filter.category = { $regex: `^${category}$`, $options: "i" };
+        }
+
+        // 🔥 Case-insensitive tag (array)
+        if (tag) {
+            filter.tags = { $regex: tag, $options: "i" };
+        }
+
+        const expenses = await Expense.find(filter)
+            .sort({ createdAt: -1 })
+            .skip((page - 1) * limit)
+            .limit(limit);
+
+        res.json(expenses);
+
+    } catch (err) {
+        res.status(500).json({ error: err.message });
     }
-
-    // 🔥 Case-insensitive tag (array)
-    if (tag) {
-      filter.tags = { $regex: tag, $options: "i" };
-    }
-
-    const expenses = await Expense.find(filter)
-      .sort({ createdAt: -1 })
-      .skip((page - 1) * limit)
-      .limit(limit);
-
-    res.json(expenses);
-
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
 };
 // GET SINGLE EXPENSE
 const getExpenseById = async (req, res) => {
@@ -143,7 +144,11 @@ const deleteExpense = async (req, res) => {
 const getSummary = async (req, res) => {
     try {
         const summary = await Expense.aggregate([
-            { $match: { user: req.user.userId } },
+            {
+                $match: {
+                    user: new mongoose.Types.ObjectId(req.user.userId)
+                }
+            },
             {
                 $group: {
                     _id: "$category",
@@ -152,6 +157,7 @@ const getSummary = async (req, res) => {
             }
         ]);
 
+        //console.log("Summary generated:", summary);
         res.json(summary);
 
     } catch (err) {
@@ -186,6 +192,43 @@ const correctCategory = async (req, res) => {
     }
 };
 
+const getTrend = async (req, res) => {
+    try {
+        const trend = await Expense.aggregate([
+            {
+                $match: {
+                    user: new mongoose.Types.ObjectId(req.user.userId)
+                }
+            }, {
+                $addFields: {
+                    parsedDate: {
+                        $toDate: "$date"
+                    }
+                }
+            },
+            {
+                $group: {
+                    _id: {
+                        $dateToString: {
+                            format: "%Y-%m-%d",
+                            date: "$parseddate"
+                        }
+                    },
+                    total: { $sum: "$amount" }
+                }
+            },
+            { $sort: { _id: 1 } }
+        ]);
+
+        res.json(trend);
+        // console.log(trend)
+        // console.log("Trend API HIT");
+        // console.log("User ID:", req.user?.userId);
+    } catch (err) {
+        console.log("TREND ERROR:", err);
+        res.status(500).json({ error: err.message });
+    }
+};
 module.exports = {
     createExpense,
     getExpenses,
@@ -194,4 +237,5 @@ module.exports = {
     updateExpense,
     getSummary,
     correctCategory,
+    getTrend
 };

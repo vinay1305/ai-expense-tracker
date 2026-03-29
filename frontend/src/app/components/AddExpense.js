@@ -17,6 +17,7 @@ export default function AddExpense({
     setTags,
     note,
     setNote
+    , isSubmitting
 }) {
     const isDisabled = !title || !amount || !date;
 
@@ -93,13 +94,17 @@ export default function AddExpense({
 
                     <button
                         onClick={addExpense}
-                        disabled={isDisabled}
-                        className={`px-4 py-2 rounded-full font-semibold transition ${isDisabled
-                            ? "bg-gray-600 text-gray-400 cursor-not-allowed"
-                            : "bg-white text-black hover:bg-gray-200"
+                        disabled={isDisabled || isSubmitting}
+                        className={`px-4 py-2 rounded-full font-semibold transition ${isDisabled || isSubmitting
+                                ? "bg-gray-600 text-gray-400 cursor-not-allowed"
+                                : "bg-white text-black hover:bg-gray-200"
                             }`}
                     >
-                        {editingId ? "Update" : "Add"}
+                        {isSubmitting
+                            ? "Processing..."
+                            : editingId
+                                ? "Update"
+                                : "Add"}
                     </button>
                 </div>
             </div>
